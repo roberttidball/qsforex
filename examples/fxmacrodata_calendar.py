@@ -23,7 +23,11 @@ def fetch_calendar(currency="USD", start_date=None, end_date=None, timeout=20):
     with urlopen("{}?{}".format(BASE_URL.format(currency=currency), query), timeout=timeout) as response:
         payload = json.load(response)
 
-    return payload.get("data", [])
+    events = payload.get("data") if isinstance(payload, dict) else None
+    if not isinstance(events, list):
+        detail = payload.get("detail") if isinstance(payload, dict) else None
+        raise ValueError("FXMacroData returned an unexpected response: {}".format(detail or "missing data list"))
+    return [event for event in events if isinstance(event, dict)]
 
 
 def top_tier_blackout_dates(events):
